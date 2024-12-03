@@ -32,9 +32,9 @@
 
         <!-- Projects Section -->
         <h3>Edit Projects</h3>
-        <label for="projects">Projects (comma-separated):</label>
+        <label for="projects">Projects:</label>
         <textarea name="projects" id="projects" rows="4" cols="50" required>
-<%= portfolioData[user.id].projects.join(', ') %></textarea
+<%= portfolioData[user.id].projects %></textarea
         >
 
         <!-- GitHub Contributions Section -->

@@ -19,8 +19,6 @@ app.set("views", "views");
 app.use(
   session({
     secret: process.env.JWT_SECRET,
-    resave: false,
-    saveUninitialized: false,
   })
 );
 
@@ -181,7 +179,7 @@ app.post("/edit", (req, res) => {
       portfolioData[user.id] = {
         user: user.displayName,
         aboutMe: aboutMe || "",
-        projects: projects || [],
+        projects: projects || "",
         githubContributions: githubContributions || "",
       };
 
