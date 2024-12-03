@@ -20,8 +20,10 @@
 
     <section>
       <h2>Portfolio</h2>
-
-      <% if (isAuthenticated && portfolioData[user.id]) { %>
+      <% if (portfolioData.user) { %>
+        <h1>testing portfolio</h1>
+      <% } %>
+      <% if (isAuthenticated && portfolioData[user]) { %>
       <form action="/edit" method="POST">
         <!-- About Me Section -->
         <h3>Edit About Me</h3>

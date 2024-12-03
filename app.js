@@ -106,7 +106,9 @@ app.get("/", (req, res) => {
         return res.status(500).send("Error parsing portfolio data");
       }
     }
-
+    console.log("isauth", isAuthenticated)
+    console.log("user", user)
+    console.log("portfolioData", portfolioData)
     res.render("index", { isAuthenticated, user, portfolioData });
   });
 });
