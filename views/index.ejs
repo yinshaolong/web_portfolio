@@ -3,72 +3,99 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio</title>
+    <title>My Professional Portfolio</title>
     <link rel="stylesheet" href="/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <header>
-      <h1>Welcome to My Portfolio</h1>
-      <% if (isAuthenticated) { %>
-      <p>Welcome, <%= user.displayName %>!</p>
-      <a href="/logout">Logout</a>
-      <% } else { %>
-      <a href="/auth/google">Login with Google</a>
-      <% } %>
+    <header class="header">
+      <div class="header-content">
+        <h1>Professional Portfolio</h1>
+        <div class="header-auth">
+          <% if (isAuthenticated) { %>
+            <p>Welcome, <%= user.displayName %>!</p>
+            <a href="/logout" class="auth-link">Logout</a>
+          <% } else { %>
+            <a href="/auth/google" class="auth-link">Login with Google</a>
+          <% } %>
+        </div>
+      </div>
     </header>
-    <section>
-      <h2>Portfolio</h2>
-      <% if (isAuthenticated && userPortfolio) { %>
-      <form action="/edit" method="POST">
-        <!-- About Me Section -->
-        <h3>Edit About Me</h3>
-        <label for="aboutMe">About Me:</label>
-        <textarea name="aboutMe" id="aboutMe" rows="4" cols="50" required>
-<%= userPortfolio.aboutMe %></textarea
-        >
-        <!-- Projects Section -->
-        <h3>Edit Projects</h3>
-        <label for="projects">Projects:</label>
-        <textarea name="projects" id="projects" rows="4" cols="50" required>
-<%= userPortfolio.projects %></textarea
-        >
-        <!-- GitHub Contributions Section -->
-        <h3>Edit GitHub Contributions</h3>
-        <label for="githubContributions">GitHub Contributions:</label>
-        <textarea
-          name="githubContributions"
-          id="githubContributions"
-          rows="4"
-          cols="50"
-          required
-        >
-<%= userPortfolio.githubContributions %></textarea
-        >
-        <button type="submit">Save</button>
-      </form>
-      <% } else if (isAuthenticated) { %>
-      <p>Create your portfolio for the first time!</p>
-      <form action="/edit" method="POST">
-        <!-- First-time portfolio creation form with empty fields -->
-        <h3>Create Your Portfolio</h3>
-        <label for="aboutMe">About Me:</label>
-        <textarea name="aboutMe" id="aboutMe" rows="4" cols="50"></textarea>
+
+    <div class="container">
+      <section class="portfolio-section">
+        <h2>Your Portfolio</h2>
         
-        <label for="projects">Projects:</label>
-        <textarea name="projects" id="projects" rows="4" cols="50"></textarea>
-        
-        <label for="githubContributions">GitHub Contributions:</label>
-        <textarea
-          name="githubContributions"
-          id="githubContributions"
-          rows="4"
-          cols="50"
-        ></textarea>
-        <button type="submit">Save</button>
-      </form>
-      <% } else { %>
-      <p>You need to log in to edit your portfolio.</p>
-      <% } %>
-    </section>
+        <% if (isAuthenticated && userPortfolio) { %>
+          <form action="/edit" method="POST" class="portfolio-form">
+            <div class="form-group">
+              <label for="aboutMe">About Me</label>
+              <textarea 
+                name="aboutMe" 
+                id="aboutMe" 
+                placeholder="Tell us about yourself..."
+                required
+              ><%= userPortfolio.aboutMe %></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="projects">Projects</label>
+              <textarea 
+                name="projects" 
+                id="projects" 
+                placeholder="Describe your projects..."
+                required
+              ><%= userPortfolio.projects %></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="githubContributions">GitHub Contributions</label>
+              <textarea 
+                name="githubContributions" 
+                id="githubContributions" 
+                placeholder="Highlight your open-source contributions..."
+                required
+              ><%= userPortfolio.githubContributions %></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Update Portfolio</button>
+          </form>
+        <% } else if (isAuthenticated) { %>
+          <p class="text-center mt-20">Create your portfolio for the first time!</p>
+          <form action="/edit" method="POST" class="portfolio-form">
+            <div class="form-group">
+              <label for="aboutMe">About Me</label>
+              <textarea 
+                name="aboutMe" 
+                id="aboutMe" 
+                placeholder="Tell us about yourself..."
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="projects">Projects</label>
+              <textarea 
+                name="projects" 
+                id="projects" 
+                placeholder="Describe your projects..."
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="githubContributions">GitHub Contributions</label>
+              <textarea 
+                name="githubContributions" 
+                id="githubContributions" 
+                placeholder="Highlight your open-source contributions..."
+              ></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Create Portfolio</button>
+          </form>
+        <% } else { %>
+          <p class="text-center mt-20">You need to log in to create or edit your portfolio.</p>
+        <% } %>
+      </section>
+    </div>
   </body>
 </html>

@@ -8,9 +8,13 @@ const fs = require("fs").promises;
 const path = require("path");
 require("dotenv").config();
 
+
 const app = express();
 
-app.use(express.static("public"));
+// Serve static files from the public directory
+console.log(path.join(__dirname, "public"));
+app.use(express.static(path.join(__dirname, "public")));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set("view engine", "ejs");
