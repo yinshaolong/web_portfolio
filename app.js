@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 require("dotenv").config();
 
@@ -19,6 +19,8 @@ app.set("views", "views");
 app.use(
   session({
     secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: false
   })
 );
 
@@ -50,26 +52,30 @@ app.use(passport.session());
 const portfolioFilePath = path.join(__dirname, "portfolio.json");
 
 // Ensure the portfolio file exists, create it if it doesn't, and initialize if empty
-const ensureFileExists = () => {
-  if (!fs.existsSync(portfolioFilePath)) {
-    // Create the file with initial empty data if it doesn't exist
-    const initialData = {};
-    fs.writeFileSync(portfolioFilePath, JSON.stringify(initialData, null, 2));
-    console.log("portfolio.json file created.");
-  } else {
-    // If file exists but is empty, initialize it with an empty object
-    const fileContent = fs.readFileSync(portfolioFilePath, "utf8");
-    if (!fileContent) {
-      fs.writeFileSync(portfolioFilePath, JSON.stringify({}, null, 2));
+const ensureFileExists = async () => {
+  try {
+    // Try to read the file
+    const stats = await fs.stat(portfolioFilePath).catch(() => null);
+
+    // If file doesn't exist, create it
+    if (!stats) {
+      await fs.writeFile(portfolioFilePath, JSON.stringify({}, null, 2));
+      console.log("portfolio.json file created.");
+      return;
+    }
+
+    // If file exists but is empty, initialize with empty object
+    const fileContent = await fs.readFile(portfolioFilePath, "utf8");
+    if (!fileContent.trim()) {
+      await fs.writeFile(portfolioFilePath, JSON.stringify({}, null, 2));
       console.log("portfolio.json was empty, initialized with empty data.");
     }
+  } catch (err) {
+    console.error("Error ensuring file exists:", err);
   }
 };
 
-// Ensure the file exists when starting the app
-ensureFileExists();
-
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   const token = req.cookies.jwt;
   let user = null;
   let isAuthenticated = false;
@@ -83,16 +89,12 @@ app.get("/", (req, res) => {
     }
   }
 
-  // Ensure the portfolio file exists before reading it
-  ensureFileExists();
+  try {
+    // Ensure the portfolio file exists
+    await ensureFileExists();
 
-  // Read the portfolio content from the JSON file
-  fs.readFile(portfolioFilePath, "utf8", (err, data) => {
-    if (err) {
-      console.error("Error reading portfolio data file:", err);
-      return res.status(500).send("Error loading portfolio");
-    }
-
+    // Read the portfolio content from the JSON file
+    const data = await fs.readFile(portfolioFilePath, "utf8");
     let portfolioData = {};
 
     // If the file is not empty, parse the data
@@ -105,8 +107,20 @@ app.get("/", (req, res) => {
       }
     }
 
-    res.render("index", { isAuthenticated, user, portfolioData });
-  });
+    // Log for debugging
+    console.log("User:", user);
+    console.log("portfolioData:", portfolioData);
+
+    res.render("index", { 
+      isAuthenticated, 
+      user, 
+      portfolioData, 
+      userPortfolio: user ? portfolioData[user.id] : null 
+    });
+  } catch (err) {
+    console.error("Error reading portfolio data file:", err);
+    return res.status(500).send("Error loading portfolio");
+  }
 });
 
 app.get(
@@ -141,7 +155,7 @@ app.get("/logout", (req, res) => {
 });
 
 // Editing route
-app.post("/edit", (req, res) => {
+app.post("/edit", async (req, res) => {
   const token = req.cookies.jwt;
   if (!token) return res.status(403).send("Unauthorized");
 
@@ -153,57 +167,53 @@ app.post("/edit", (req, res) => {
     const { aboutMe, projects, githubContributions } = req.body;
 
     // Ensure the portfolio file exists
-    ensureFileExists();
+    await ensureFileExists();
 
     // Read the existing portfolio data from the file
-    fs.readFile(portfolioFilePath, "utf8", (err, data) => {
-      if (err) {
-        console.error("Error reading portfolio data file:", err);
-        return res.status(500).send("Error updating portfolio");
+    const data = await fs.readFile(portfolioFilePath, "utf8");
+
+    // Parse the existing portfolio data
+    let portfolioData = {};
+
+    // If the file is not empty, parse the data
+    if (data) {
+      try {
+        portfolioData = JSON.parse(data);
+      } catch (e) {
+        console.error("Error parsing portfolio data:", e);
+        return res.status(500).send("Error parsing portfolio data");
       }
+    }
 
-      // Parse the existing portfolio data
-      let portfolioData = {};
+    // Create or update the portfolio structure for the logged-in user
+    portfolioData[user.id] = {
+      user: user.displayName,
+      aboutMe: aboutMe || "",
+      projects: projects || "",
+      githubContributions: githubContributions || "",
+    };
 
-      // If the file is not empty, parse the data
-      if (data) {
-        try {
-          portfolioData = JSON.parse(data);
-        } catch (e) {
-          console.error("Error parsing portfolio data:", e);
-          return res.status(500).send("Error parsing portfolio data");
-        }
-      }
+    // Write the updated portfolio data back to the file
+    await fs.writeFile(
+      portfolioFilePath,
+      JSON.stringify(portfolioData, null, 2)
+    );
 
-      // Create or update the portfolio structure for the logged-in user
-      portfolioData[user.id] = {
-        user: user.displayName,
-        aboutMe: aboutMe || "",
-        projects: projects || "",
-        githubContributions: githubContributions || "",
-      };
-
-      // Write the updated portfolio data back to the file
-      fs.writeFile(
-        portfolioFilePath,
-        JSON.stringify(portfolioData, null, 2),
-        (err) => {
-          if (err) {
-            console.error("Error writing to portfolio data file:", err);
-            return res.status(500).send("Error saving portfolio changes");
-          }
-
-          console.log("Portfolio updated successfully");
-          res.redirect("/");
-        }
-      );
-    });
+    console.log("Portfolio updated successfully");
+    res.redirect("/");
   } catch (err) {
+    console.error("Error in edit route:", err);
     res.status(403).send("Unauthorized");
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, async () => {
+  try {
+    // Ensure file exists when starting the app
+    await ensureFileExists();
+    console.log(`Server is running on http://localhost:${PORT}`);
+  } catch (err) {
+    console.error("Error starting server:", err);
+  }
 });
