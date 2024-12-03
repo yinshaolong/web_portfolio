@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to My Portfolio</h1>
+
+      <% if (isAuthenticated) { %>
+      <p>Welcome, <%= user.displayName %>!</p>
+      <a href="/logout">Logout</a>
+      <% } else { %>
+      <a href="/auth/google">Login with Google</a>
+      <% } %>
+    </header>
+
+    <section>
+      <h2>Portfolio</h2>
+
+      <% if (isAuthenticated && portfolioData[user.id]) { %>
+      <form action="/edit" method="POST">
+        <!-- About Me Section -->
+        <h3>Edit About Me</h3>
+        <label for="aboutMe">About Me:</label>
+        <textarea name="aboutMe" id="aboutMe" rows="4" cols="50" required>
+<%= portfolioData[user.id].aboutMe %></textarea
+        >
+
+        <!-- Projects Section -->
+        <h3>Edit Projects</h3>
+        <label for="projects">Projects (comma-separated):</label>
+        <textarea name="projects" id="projects" rows="4" cols="50" required>
+<%= portfolioData[user.id].projects.join(', ') %></textarea
+        >
+
+        <!-- GitHub Contributions Section -->
+        <h3>Edit GitHub Contributions</h3>
+        <label for="githubContributions">GitHub Contributions:</label>
+        <textarea
+          name="githubContributions"
+          id="githubContributions"
+          rows="4"
+          cols="50"
+          required
+        >
+<%= portfolioData[user.id].githubContributions %></textarea
+        >
+
+        <button type="submit">Save</button>
+      </form>
+      <% } else { %>
+      <p>You need to log in to edit your portfolio.</p>
+      <% } %>
+    </section>
+  </body>
+</html>
