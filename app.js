@@ -129,9 +129,17 @@ app.get(
 );
 
 app.get("/logout", (req, res) => {
+  // Clear the JWT cookie
   res.clearCookie("jwt");
-  req.logout();
-  res.redirect("/");
+
+  // If you're using passport.js for session management, call req.logout
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).send("Error logging out");
+    }
+    // Redirect to the home page after successful logout
+    res.redirect("/");
+  });
 });
 
 // Editing route
